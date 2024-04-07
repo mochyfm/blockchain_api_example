@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { Request, Response } from "express";
-import blockchain from "../config/blockchain";
+import blockchain from "../services/blockchain.service";
 
 const getTransactionsFromUser = async (req: Request, res: Response) => {
   let response = {

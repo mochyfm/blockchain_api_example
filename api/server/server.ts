@@ -9,6 +9,7 @@ import transactionsRouter from "../routes/transactions.routes";
 import { ethers, Provider } from "ethers";
 
 // Instance of the server
+require('dotenv').config();
 const app: Express = express();
 
 // We disable the x-powered-by and etag feature in order to hide the server type
