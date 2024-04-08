@@ -1,9 +1,12 @@
+import { ethers } from "ethers";
 import {
-  ethers,
-  TransactionResponse,
-} from "ethers";
+  CONTRACT_ABI,
+  CONTRACT_ADDRESS,
+  PROVIDER,
+  SEND_MESSAGE,
+  SMART_CONTRACT,
+} from "../config/blockchain.config";
 import { Message } from "../../types/Types";
-import { SMART_CONTRACT as contract }  from "../config/blockchain.config";
 
 /**
  * Sends an encrypted message through the smart contract.
@@ -12,45 +15,72 @@ import { SMART_CONTRACT as contract }  from "../config/blockchain.config";
  * @param message Message to send.
  * @returns Transaction hash.
  */
-const sendMessage = async (from: string, to: string, message: string): Promise<string | undefined> => {
+const sendMessage = async (
+  fromSignature: string,
+  to: string,
+  message: string
+): Promise<void> => {
   try {
-    // Encode the message as bytes32
+    console.log(
+      "Who is creating the transaction?: ",
+      `
+      {
+        Address: ${fromSignature},
+        To: ${to}
+      }
+    `
+    );
+
+    const wallet = new ethers.Wallet(fromSignature, PROVIDER);
     const bytes32message = ethers.encodeBytes32String(message);
-
-    // Send transaction to the contract
-    const tx: TransactionResponse = await contract.sendMessage(to, bytes32message);
-
-    // Wait for the transaction to be confirmed
-    await tx.wait();
-    console.log(`Message sent [ From: ${from} to: ${to} ]`);
-
-    return tx.hash;
+    console.log("Message: ", bytes32message);
+    // Codificar los parámetros de la función
+    const txData = SMART_CONTRACT.interface.encodeFunctionData(SEND_MESSAGE, [
+      to,
+      bytes32message,
+    ]);
+    // Enviar la transacción a la red Ethereum
+    const txResponse = await wallet.sendTransaction({
+      to: SMART_CONTRACT.getAddress(),
+      data: txData,
+    });
+    console.log("Transaction sent:", txResponse.hash);
   } catch (error) {
     console.error("Error sending message:", error);
   }
 };
 
-/**
- * Retrieves messages received by an address.
- * @param from Recipient's address.
- * @returns List of formatted messages.
- */
-const getMessages = async (from: string): Promise<Message[]> => {
+const getAllMessages = async (privateKey: string, senderToFilter: string) => {
   try {
-    // Get messages from the contract
-    const messages: any[] = await contract.getMessages(from);
+    const wallet = new ethers.Wallet(privateKey, PROVIDER);
+    const contract = new ethers.Contract(
+      CONTRACT_ADDRESS,
+      CONTRACT_ABI,
+      wallet
+    );
+
+    console.log(`{ SignerKey: ${privateKey.substring(0, 6)}... }`);
+    const messages = await contract.getAllConversations();
+
     console.log(messages);
 
-    // Format received messages
-    const formattedMessages: Message[] = messages.map(msg => ({
-      sender: msg.sender,
-      encryptedContent: msg.encryptedContent
-    }));
-    return formattedMessages;
+    // Descifrar los mensajes antes de mostrarlos al usuario
+    const decryptedMessages = messages.map((message: Message) => {
+      return {
+        sender: wallet.address === message.sender ? "Me" : message.sender,
+        reciever: wallet.address === message.receiver ? "Me" : message.receiver,
+        content: ethers.decodeBytes32String(message.content),
+      };
+    });
+
+    if (senderToFilter) {
+      return decryptedMessages.filter(( message : Message) => message.sender === senderToFilter);
+    }
+    return decryptedMessages;
   } catch (error) {
-    console.error("Error getting messages:", error);
-    return [];
+    console.error("Error retrieving messages:", error);
+    throw error;
   }
 };
 
-export default { sendMessage, getMessages };
+export default { sendMessage, getAllMessages };

@@ -1,4 +1,5 @@
 export interface Message {
-    sender: string;
-    encryptedContent: string;
+    sender?: string;
+    receiver?: string;
+    content: string;
   }

@@ -1,15 +1,16 @@
+import { config } from "dotenv";
+config();
+
 import express, { Express } from "express";
 import helmet from "helmet";
 import cors from "cors";
 import path from "path";
 import { createServer } from "http";
-import { SERVER_PORT } from "../config/server.config";
+import { ROOT_API_URL, SERVER_PORT } from "../config/server.config";
 import contractsRouter from "../routes/constracts.routes";
 import transactionsRouter from "../routes/transactions.routes";
-import { ethers, Provider } from "ethers";
 
 // Instance of the server
-require('dotenv').config();
 const app: Express = express();
 
 // We disable the x-powered-by and etag feature in order to hide the server type
@@ -30,7 +31,7 @@ app.use(cors());
 // Enables the public folder of the server (not used yet)
 app.use(express.static(path.join(process.cwd(), "public")));
 
-app.get("/enpower/api", (req, res) => {
+app.get(ROOT_API_URL, (req, res) => {
   return res.send({
     error: false,
     message: "Welcome to the EnPower Blockchain Restful CRUD API",
@@ -40,8 +41,8 @@ app.get("/enpower/api", (req, res) => {
   });
 });
 
-app.use("/enpower/api", contractsRouter);
-app.use("/enpower/api", transactionsRouter);
+app.use(ROOT_API_URL, contractsRouter);
+app.use(ROOT_API_URL, transactionsRouter);
 
 const server = createServer(app);
 

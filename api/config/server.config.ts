@@ -4,6 +4,7 @@ export const DB_HOST = process.env.DB_HOST || '127.0.0.1';
 export const DB_USER = process.env.DB_USER || 'root';
 export const DB_PASSWORD = process.env.DB_PASSWORD || '1234';
 export const DB_DATABASE = process.env.DB_DATABASE || 'bk_db';
+export const ROOT_API_URL = process.env.ROOT_API_URL || "/prod/enpower/api"
 
 export const CORS_OPTIONS = {
   origin: "http://localhost",

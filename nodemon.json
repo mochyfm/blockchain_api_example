@@ -1,7 +1,8 @@
 {
     "verbose": true,
     "watch": [
-        "api"
+        "api",
+        ".env"
     ],
     "ignore": [
         "node_modules"

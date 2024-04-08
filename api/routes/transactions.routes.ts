@@ -8,19 +8,20 @@ const transactionsRouter : Router = Router();
  *       HTTP Verbs                                             URL                                 
  * 
  *   GET              http://localhost:8080/enpower/api/{contract_address}/transactions
- *   GET              http://localhost:8080/enpower/api/transactions/{user}    
- *   POST (w/ Body)   http://localhost:8080/enpower/api/transactions?destination={target_address}&contractId=1
+ *   GET              http://localhost:8080/enpower/api/transactions?from={user}/{userPrivateKey}  
+ *   POST (w/ Body)   http://localhost:8080/enpower/api/transactions?destination={target_address}
  * 
  */
 
 /* GET */
 
-transactionsRouter.route('/transactions').get(transactionsController.getTransactionsFromUser);
-// transactionsRouter.route('/transactions/:id').get(transactionsController.getTransactionById);
+transactionsRouter.route('/inbox/:privateKey/:sender').get(transactionsController.getAllConversations);
+transactionsRouter.route('/inbox/:privateKey').get(transactionsController.getAllConversations);
+
 
 /* POST */
 
-transactionsRouter.route('/transactions').post(transactionsController.sendMessage);
+transactionsRouter.route('/new/conversation').post(transactionsController.sendMessage);
 
 
 export default transactionsRouter;

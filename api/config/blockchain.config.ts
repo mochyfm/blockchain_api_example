@@ -1,44 +1,24 @@
-import { ethers, Interface, JsonRpcProvider } from "ethers";
+import { Contract, ethers, Interface, JsonRpcProvider, Wallet } from "ethers";
 
 // Address of the smart contract on the Ethereum network
-const CONTRACT_ADDRESS: string = process.env.CONTRACT_ADDRESS || "0xE05b5eAD574B87Bd61b5cA16cA8068d41250550E";
+export const CONTRACT_ADDRESS: string =
+  process.env.CONTRACT_ADDRESS || "0x2958085fb7e60Eca495fcF8741C29B4a98ee811D";
+
+// The name of the methods of the Smart Contract
+export const SEND_MESSAGE = "sendMessage";
+export const GET_MESSAGES = "getMessages";
+export const GET_MESSAGE_WITH_FILTER = "getMessagesWithFilter";
+
 // Address of the provider for connecting into the Ethereum network
-const PROVIDER_ADDRESS =
+export const PROVIDER_ADDRESS =
   process.env.PROVIDER_ADDRESS || "http://127.0.0.1:7545/";
 // Address of the account on the Ethereum network that signed the contract
-const SIGNER_ADDRESS =
-  process.env.SIGNER_ADDRESS ||
-  "0xa29a80c7c040c5dac55e945d830c6a3b8143ab29c4f01617cebde6fe2e039ffc";
 
 // ABI interface of the smart contract
-const ABI: Interface = new ethers.Interface([
+export const CONTRACT_ABI: Interface = new ethers.Interface([
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_recipient",
-        type: "address",
-      },
-      {
-        internalType: "bytes32",
-        name: "_encryptedContent",
-        type: "bytes32",
-      },
-    ],
-    name: "sendMessage",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_sender",
-        type: "address",
-      },
-    ],
-    name: "getMessages",
+    inputs: [],
+    name: "getAllConversations",
     outputs: [
       {
         components: [
@@ -48,9 +28,14 @@ const ABI: Interface = new ethers.Interface([
             type: "address",
           },
           {
-            internalType: "bytes32",
-            name: "encryptedContent",
-            type: "bytes32",
+            internalType: "address",
+            name: "receiver",
+            type: "address",
+          },
+          {
+            internalType: "string",
+            name: "content",
+            type: "string",
           },
         ],
         internalType: "struct SecureMessaging.Message[]",
@@ -61,22 +46,44 @@ const ABI: Interface = new ethers.Interface([
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_recipient",
+        type: "address",
+      },
+      {
+        internalType: "string",
+        name: "_encryptedContent",
+        type: "string",
+      },
+    ],
+    name: "sendMessage",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
 ]);
 
 // JSON-RPC provider for connecting to the local Ethereum network
-const PROVIDER_INSTANCE: JsonRpcProvider = new ethers.JsonRpcProvider(
+export const PROVIDER: JsonRpcProvider = new ethers.JsonRpcProvider(
   PROVIDER_ADDRESS
 );
 
-// Creating a Wallet object to sign transactions
-const SIGNER_INSTANCE: ethers.Wallet = new ethers.Wallet(
-  SIGNER_ADDRESS,
-  PROVIDER_INSTANCE
-);
+export const CURRENT_SIGNER = PROVIDER.getSigner();
+
+export const newProviderSigned = (
+  signature: string,
+  provider: string = PROVIDER_ADDRESS
+) => {
+  console.log(signature, provider);
+  return new ethers.JsonRpcProvider(provider, signature);
+};
 
 // Contract object to interact with the smart contract
 export const SMART_CONTRACT = new ethers.Contract(
   CONTRACT_ADDRESS,
-  ABI,
-  SIGNER_INSTANCE
+  CONTRACT_ABI,
+  PROVIDER
 );

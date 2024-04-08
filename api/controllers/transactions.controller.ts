@@ -2,22 +2,28 @@ import { ethers } from "ethers";
 import { Request, Response } from "express";
 import blockchain from "../services/blockchain.service";
 
-const getTransactionsFromUser = async (req: Request, res: Response) => {
+const getAllConversations = async (req: Request, res: Response) => {
   let response = {
     statusCode: 401,
-    message: "",
+    note: "",
     messagesFromUser: [{}],
   };
 
-  if (ethers.isAddress(req.query?.from)) {
+  const privateKey = req.params.privateKey;
+  const sender = req.params.sender;
+
+  console.log("Who is checking the mailbox?: ", privateKey);
+
+  if (privateKey) {
     try {
-      const messageList = await blockchain.getMessages(req.query.from);
-      response.messagesFromUser = messageList;
-      response.statusCode = 200;
+
+      const messagesFilteredByUser = await blockchain.getAllMessages(privateKey, sender);
+      response.messagesFromUser = messagesFilteredByUser
+
     } catch (error) {
       console.error(error);
       response.statusCode = 500;
-      response.message = "Error";
+      response.note = "Error";
     }
   }
   return res.send(response);
@@ -30,23 +36,37 @@ const sendMessage = async (req: Request, res: Response) => {
     transaction: "",
   };
 
-  if (req.body.from && req.body.message && req.body.to) {
+  
+  const fromSignature = (typeof req.query.from === 'string') ? req.query.from : null;
+  const addressTo = req.body.to;
+  const message = req.body.message;
+
+  if (message && addressTo && fromSignature) {
     try {
+      console.log(`
+      {
+        from: ${fromSignature},
+        to: ${addressTo},
+        message: ${message}
+      }`);
+
+      // const realSignature = new ethers.Wallet(signature);
       const transaction = await blockchain.sendMessage(
-        req.body.from,
-        req.body.to,
-        req.body.message
+        fromSignature,
+        addressTo,
+        message,
       );
-      response.message = `Message sent to ${req.body.to}`;
-      if (transaction) {
-        response.transaction = transaction;
-      }
+
+      response.message = `Message sent to ${addressTo}`;
+      // if (transaction) {
+      //   response.transaction = transaction;
+      // }
     } catch (error) {
       console.error(error);
-      response.message = "";
+      response.message = "Could not send the message";
     }
   }
   return res.send(response);
 };
 
-export default { getTransactionsFromUser, sendMessage };
+export default { getAllConversations, sendMessage };
