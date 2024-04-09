@@ -1,6 +1,5 @@
-import { ethers } from "ethers";
 import { Request, Response } from "express";
-import blockchain from "../services/blockchain.service";
+import blockchain from "../services/transactions.service";
 
 const getAllConversations = async (req: Request, res: Response) => {
   let response = {
@@ -58,6 +57,7 @@ const sendMessage = async (req: Request, res: Response) => {
       );
 
       response.message = `Message sent to ${addressTo}`;
+      response.transaction = transaction ? transaction.hash : 'Error';
       // if (transaction) {
       //   response.transaction = transaction;
       // }

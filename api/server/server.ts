@@ -6,12 +6,16 @@ import helmet from "helmet";
 import cors from "cors";
 import path from "path";
 import { createServer } from "http";
-import { ROOT_API_URL, SERVER_PORT } from "../config/server.config";
-import contractsRouter from "../routes/constracts.routes";
+import { ROOT_API_BASE_URL, API_PORT, SWAGGER_URL, API_BASE_URL } from "../config/server.config";
 import transactionsRouter from "../routes/transactions.routes";
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerOptions from "../config/swagger.config";
+import swaggerUiExpress from 'swagger-ui-express';
 
 // Instance of the server
 const app: Express = express();
+const swaggerUi = swaggerUiExpress;
+const specs = swaggerJSDoc(swaggerOptions);
 
 // We disable the x-powered-by and etag feature in order to hide the server type
 app.set("x-powered-by", false);
@@ -31,7 +35,7 @@ app.use(cors());
 // Enables the public folder of the server (not used yet)
 app.use(express.static(path.join(process.cwd(), "public")));
 
-app.get(ROOT_API_URL, (req, res) => {
+app.get(ROOT_API_BASE_URL, (req, res) => {
   return res.send({
     error: false,
     message: "Welcome to the EnPower Blockchain Restful CRUD API",
@@ -41,16 +45,17 @@ app.get(ROOT_API_URL, (req, res) => {
   });
 });
 
-app.use(ROOT_API_URL, contractsRouter);
-app.use(ROOT_API_URL, transactionsRouter);
+
+app.use(ROOT_API_BASE_URL, transactionsRouter);
+
+app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(specs, { explorer: true }));
 
 const server = createServer(app);
 
 const runServer = () => {
   console.log("Starting server ...");
-  server.listen(SERVER_PORT, () => {
-    const ipAddress = "localhost";
-    console.log(`Server started on port http://${ipAddress}:${SERVER_PORT}`);
+  server.listen(API_PORT, () => {
+    console.log(`Server started on port ${API_BASE_URL}:${API_PORT}`);
   });
 };
 
